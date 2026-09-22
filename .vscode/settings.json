@@ -1,0 +1,17 @@
+{
+  "files.associations": {
+    "*.sql": "postgres",
+    "*.prisma": "prisma"
+  },
+  "sqltools.connections": [
+    {
+      "name": "Pathogo PostgreSQL",
+      "dialect": "PostgreSQL",
+      "server": "localhost",
+      "port": 5432,
+      "database": "pathogo",
+      "username": "postgres",
+      "password": "postgrespassword"
+    }
+  ]
+}

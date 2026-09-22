@@ -1,0 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  SAMPLE_COLLECTED
+  PROCESSING
+  REPORT_READY
+  CANCELLED
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum CollectionType {
+  HOME_COLLECTION
+  LAB_VISIT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model PackageCategory {
+  id          String          @id @default(uuid())
+  slug        String          @unique
+  name        String
+  description String?
+  packages    HealthPackage[]
+  createdAt   DateTime        @default(now())
+}
+
+model HealthPackage {
+  id              String            @id @default(uuid())
+  slug            String            @unique
+  name            String
+  description     String
+  categorySlug    String
+  category        PackageCategory   @relation(fields: [categorySlug], references: [slug])
+  originalPrice   Float
+  discountPrice   Float
+  discountPercent Int
+  testCount       Int
+  isPopular       Boolean           @default(false)
+  reportTimeHours Int               @default(24)
+  fastingRequired Boolean           @default(false)
+  includedSummary String[]
+  bookings        TestBookingItem[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([categorySlug])
+}
+
+model TestCategory {
+  id         String    @id @default(uuid())
+  slug       String    @unique
+  name       String
+  iconName   String
+  testsCount Int       @default(0)
+  tests      LabTest[]
+  createdAt  DateTime  @default(now())
+}
+
+model LabTest {
+  id              String            @id @default(uuid())
+  slug            String            @unique
+  name            String
+  code            String?
+  categorySlug    String
+  category        TestCategory      @relation(fields: [categorySlug], references: [slug])
+  price           Float
+  originalPrice   Float?
+  description     String
+  fastingRequired Boolean           @default(false)
+  reportTimeHours Int               @default(24)
+  bookings        TestBookingItem[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([categorySlug])
+}
+
+model Doctor {
+  id              String              @id @default(uuid())
+  name            String
+  slug            String              @unique
+  specialty       String
+  specialtySlug   String
+  experienceYrs   Int
+  qualification   String
+  hospital        String
+  consultationFee Float
+  rating          Float               @default(4.9)
+  reviewCount     Int                 @default(0)
+  imageUrl        String
+  availableDays   String[]
+  timeSlots       String[]
+  about           String
+  appointments    DoctorAppointment[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([specialtySlug])
+}
+
+model LabPartner {
+  id        String   @id @default(uuid())
+  name      String
+  logoUrl   String?
+  rating    Float    @default(4.9)
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id           String              @id @default(uuid())
+  name         String
+  email        String              @unique
+  phone        String
+  password     String
+  gender       Gender?             @default(MALE)
+  age          Int?
+  city         String?
+  address      String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  bookings     TestBooking[]
+  appointments DoctorAppointment[]
+
+  @@index([email])
+  @@index([phone])
+}
+
+model TestBooking {
+  id             String            @id @default(uuid())
+  bookingNumber  String            @unique
+  userId         String?
+  user           User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  patientName    String
+  patientEmail   String
+  patientPhone   String
+  patientAge     Int
+  patientGender  Gender
+  collectionType CollectionType    @default(HOME_COLLECTION)
+  address        String?
+  city           String?
+  pincode        String?
+  scheduledDate  DateTime
+  scheduledSlot  String
+  couponCode     String?
+  discountAmount Float             @default(0)
+  totalAmount    Float
+  status         BookingStatus     @default(PENDING)
+  notes          String?
+  items          TestBookingItem[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([patientPhone])
+  @@index([bookingNumber])
+  @@index([userId])
+}
+
+model TestBookingItem {
+  id        String         @id @default(uuid())
+  bookingId String
+  booking   TestBooking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  packageId String?
+  package   HealthPackage? @relation(fields: [packageId], references: [id])
+  testId    String?
+  test      LabTest?       @relation(fields: [testId], references: [id])
+  unitPrice Float
+  quantity  Int            @default(1)
+}
+
+model DoctorAppointment {
+  id                String            @id @default(uuid())
+  appointmentNumber String            @unique
+  userId            String?
+  user              User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  doctorId          String
+  doctor            Doctor            @relation(fields: [doctorId], references: [id])
+  patientName       String
+  patientEmail      String
+  patientPhone      String
+  patientAge        Int
+  patientGender     Gender
+  appointmentDate   DateTime
+  appointmentSlot   String
+  consultationType  String            @default("VIDEO")
+  symptoms          String?
+  status            AppointmentStatus @default(CONFIRMED)
+  consultationFee   Float
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([doctorId])
+  @@index([patientPhone])
+  @@index([appointmentNumber])
+  @@index([userId])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  author    String
+  rating    Int      @default(5)
+  comment   String
+  verified  Boolean  @default(true)
+  location  String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
