@@ -274,12 +274,12 @@ class HeroSection extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.network(
-                  'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=600&auto=format&fit=crop&q=80',
+                Image.asset(
+                  'assets/images/family_hero.jpg',
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) => Container(
                     color: const Color(0xFFE2E8F0),
-                    child: const Icon(Icons.favorite_rounded, size: 80, color: Color(0xFFE11D74)),
+                    child: const Icon(Icons.family_restroom_rounded, size: 80, color: Color(0xFFE11D74)),
                   ),
                 ),
                 
